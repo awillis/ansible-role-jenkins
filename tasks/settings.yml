@@ -21,6 +21,12 @@
   service: name=jenkins state=restarted
   when: jenkins_init_prefix.changed
 
+- name: Turn off http if https is enabled
+  set_fact:
+    jenkins_http_port: -1
+    jenkins_uri_scheme: https
+  when: jenkins_ssl_enable == true
+
 - name: Set HTTP port in Jenkins config.
   lineinfile:
     backrefs: yes
@@ -28,6 +34,28 @@
     regexp: '^{{ jenkins_http_port_param }}='
     line: '{{ jenkins_http_port_param }}={{ jenkins_http_port }}'
   register: jenkins_http_config
+
+- name: Set HTTPS port in Jenkins config.
+  lineinfile:
+    backrefs: yes
+    dest: "{{ jenkins_init_file }}"
+    regexp: '^{{ jenkins_https_port_param }}='
+    line: '{{ jenkins_https_port_param }}={{ jenkins_https_port }}'
+  register: jenkins_https_config
+  when:
+    - ansible_os_family == 'Debian'
+    - jenkins_ssl_enable == true
+
+- name: Pass HTTPS port option
+  lineinfile:
+    state: present
+    backrefs: yes
+    dest: "{{ jenkins_init_file }}"
+    regexp: '--httpPort=\${{ jenkins_http_port_param }}'
+    insertafter: ' --httpsPort=${{ jenkins_https_port_param }}'
+  when:
+    - ansible_os_family == 'Debian'
+    - jenkins_ssl_enable == true
 
 - name: Ensure jenkins_home {{ jenkins_home }} exists
   file:
