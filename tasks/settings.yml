@@ -25,7 +25,7 @@
   set_fact:
     jenkins_http_port: -1
     jenkins_uri_scheme: https
-  when: jenkins_ssl_enable == true
+  when: jenkins_ssl_enable == True
 
 - name: Set HTTP port in Jenkins config.
   lineinfile:
@@ -44,7 +44,7 @@
   register: jenkins_https_config
   when:
     - ansible_os_family == 'Debian'
-    - jenkins_ssl_enable == true
+    - jenkins_ssl_enable == True
 
 - name: Pass HTTPS port option
   lineinfile:
@@ -55,7 +55,7 @@
     insertafter: ' --httpsPort=${{ jenkins_https_port_param }}'
   when:
     - ansible_os_family == 'Debian'
-    - jenkins_ssl_enable == true
+    - jenkins_ssl_enable == True
 
 - name: Ensure jenkins_home {{ jenkins_home }} exists
   file:
